@@ -1,32 +1,32 @@
 import React, { useState, useEffect } from "react";
-import { Button, Space, Result } from "antd";
-import axios from "axios";
+import { Button, Space, Result, message } from "antd";
 import LOADING_GIF from "../../public/loading.gif";
 import styles from "./styles.module.css";
+import { doSQLProduce } from "../../api/doRequest";
 
 const Home = () => {
-  const [msg, setMsg] = useState("");
+  const [msg, setMsg] = useState("Happy NewYear!");
   const [count, setCount] = useState(0);
   const [isLoading, setLoading] = useState(true);
   const [isError, setError] = useState(false);
+  const [list, setList] = useState([]);
 
   useEffect(() => {
     setTimeout(fetchData, 2000);
   }, []);
 
   const fetchData = () => {
-    axios("http://127.0.0.1:5000/", {
-      method: "GET", // or 'POST'
-      headers: {
-        "Content-Type": "application/json",
-      },
+    setLoading(true);
+    doSQLProduce("get_little_cake", {
+      $mock_id1: "2",
+      user: "little_cake",
+      $mock_id2: "1",
     })
-      .then((res) => {
-        console.log(res);
-        setMsg(res.data);
+      .then((data) => {
+        setList(data);
       })
       .catch((error) => {
-        console.log(error);
+        message.error(error.message);
         setError(true);
       })
       .finally(() => {
@@ -43,7 +43,7 @@ const Home = () => {
           status="error"
           title="There are some problems..."
           extra={
-            <Button type="primary" key="again">
+            <Button onClick={fetchData} type="primary" key="again">
               Try it again
             </Button>
           }
@@ -51,10 +51,17 @@ const Home = () => {
       ) : (
         <div className={styles.wrap}>
           <h1>{msg}</h1>
+          {list.map((item) => (
+            <h3 key={item.id}>{item.name}</h3>
+          ))}
           <h2>count: {count}</h2>
           <Space>
-            <Button onClick={() => setCount(count + 1)}>add</Button>
-            <Button onClick={() => setCount(count - 1)}>reduce</Button>
+            <Button type="primary" onClick={() => setCount(count + 1)}>
+              add
+            </Button>
+            <Button danger onClick={() => setCount(count - 1)}>
+              reduce
+            </Button>
           </Space>
         </div>
       )}

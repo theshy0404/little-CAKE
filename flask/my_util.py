@@ -5,6 +5,10 @@ import simplejson
 import MySQLdb
 import my_text as text
 
+default_database = 'mycode'
+number_types = ['int', 'decimal', 'float']
+print('int' in number_types)
+
 
 def open_sql(database_name):
     db = MySQLdb.connect("localhost", "root", "sql2008", database_name, charset='utf8', autocommit=True)
@@ -13,6 +17,29 @@ def open_sql(database_name):
 
 def close_sql(cursor):
     cursor.close()
+
+
+def get_produce_params(cursor, produce):
+    sql = f"select PARAMETER_NAME , DATA_TYPE from information_schema.PARAMETERS where specific_schema='{default_database}' and specific_name='{produce}';"
+    cursor.execute(sql)
+    return result_to_json(cursor)
+
+
+def do_sql_produce(cursor, produce, params):
+    produce_params_result = get_produce_params(cursor, produce)
+    params_sql = ""
+    if len(produce_params_result):
+        for produce_param in simplejson.loads(produce_params_result):
+            param_type = produce_param["DATA_TYPE"]
+            param_name = produce_param["PARAMETER_NAME"]
+            param_value = params[param_name]
+            if param_type in number_types:
+                params_sql = params_sql + f"{param_value},"
+            else:
+                params_sql = params_sql + f"'{param_value}',"
+        params_sql = params_sql[0:-1]
+    cursor.execute(f"call get_little_cake({params_sql});")
+    return result_to_json(cursor)
 
 
 def do_sql(cursor, sql):
@@ -43,115 +70,6 @@ def result_to_json(cur):
         json_data.append(dict(zip(row_headers, result)))
     return simplejson.dumps(json_data, ensure_ascii=False)
 
-
-def do_js(func, code, input, type):
-    import execjs
-    isError = False
-    try:
-        if type == 'B8':
-            js = execjs.compile(f'''
-                        function ListNode(val) {{
-                            this.val = val;
-                            this.next = null;
-                        }}
-                        function insertList(nums){{
-                            let pre=new ListNode(nums[0]);
-                            const head=pre;
-                            for(let i=1;i<nums.length;i++){{
-                                const node = new ListNode();
-                                node.val=nums[i];
-                                pre.next=node;
-                                pre=node;
-                            }}
-                            return head;
-                        }}
-                        function toString(head){{
-                            const results=[];
-                            while(head!=null){{
-                                results.push(head.val);
-                                head=head.next;
-                            }}
-                            return '['+results.join(',')+']'
-                        }}
-                        {code}
-                        function run(nums,value){{
-                            const head = insertList(nums);
-                            let node = head;
-                            while(node!=null){{
-                                if(node.val===value) {func}(node);
-                                node=node.next;
-                            }}
-                            return toString(head);
-                        }}
-                    ''')
-            result = js.eval(f'run({input},5)')
-        else:
-            js = execjs.compile(f'''
-                {code}
-            ''')
-            result = str(js.eval(f"{func}({input})")).replace(' ', '')
-    except Exception as e:
-        result = e
-        isError = True
-    return result, isError
-
-
-def do_py(func, code, input):
-    isError = False
-    LOC = f""" 
-{code} 
-"""
-    try:
-        exec(LOC)
-        print(LOC)
-        result = eval(f'{func}({input})')
-        result = str(result).replace(' ', '')
-    except Exception as e:
-        result = e
-        isError = True
-    return result, isError
-
-
-def get_label(dosql, labels):
-    label_results = ''
-    for label in labels:
-        label_results += (',' + simplejson.loads(do_sql(dosql, f"call select_label('{label}');"))[0]['text'])
-    return label_results[1:]
-
-
-def content_to_labels(title, content):
-    return text.get_labels(title, content)
-
-
-def concat_label(circle_labels, content_labels):
-    if len(circle_labels) == 0:
-        return content_labels
-    results = []
-    result = ''
-    for content_label in content_labels:
-        for circle_label in circle_labels:
-            score = text.get_sim(circle_label.get('label'), content_label).get('score')
-            try:
-                if float(score) > 0.5:
-                    result = circle_label
-                else:
-                    result = content_label
-            except:
-                result = content_label
-        results.append(result)
-    return results
-
-
-def is_rs_eauals(rs1, rs2):
-    if len(rs1) != len(rs2):
-        return False
-    return True
-
-# words = ['解释器','编译器','js']
-#
-# for result in results:
-#     for word in words:
-#         score=text.get_sim(result,word).get('score')
-#         if score < 0.5:
-#             print(f'{score},{result},{word}')
-# print('1'+'1')
+# cursor=open_sql('mycode')
+# print(do_sql_produce(cursor,'get_little_cake'))
+# close_sql(cursor)
