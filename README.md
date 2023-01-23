@@ -1,1 +1,2 @@
-# little-CAKE
+# little-CAKE 
+# React / Python / MySQL
