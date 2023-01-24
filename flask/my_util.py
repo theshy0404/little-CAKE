@@ -31,7 +31,7 @@ def do_sql_produce(cursor, produce, params):
     if len(produce_params_result):
         for produce_param in simplejson.loads(produce_params_result):
             param_type = produce_param["DATA_TYPE"]
-            param_name = produce_param["PARAMETER_NAME"]
+            param_name = produce_param["PARAMETER_NAME"][1:]
             param_value = params[param_name]
             if param_type in number_types:
                 params_sql = params_sql + f"{param_value},"
@@ -39,6 +39,8 @@ def do_sql_produce(cursor, produce, params):
                 params_sql = params_sql + f"'{param_value}',"
         params_sql = params_sql[0:-1]
     cursor.execute(f"call get_little_cake({params_sql});")
+    if cursor.description is None:
+        return 'No Data...'
     return result_to_json(cursor)
 
 

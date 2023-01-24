@@ -18,12 +18,12 @@ const Home = () => {
   const fetchData = () => {
     setLoading(true);
     doSQLProduce("get_little_cake", {
-      $mock_id1: "2",
+      mock_id1: "2",
       user: "little_cake",
-      $mock_id2: "1",
+      mock_id2: "1",
     })
       .then((data) => {
-        setList(data);
+        Array.isArray(data) && setList(data);
       })
       .catch((error) => {
         message.error(error.message);
@@ -43,7 +43,7 @@ const Home = () => {
           status="error"
           title="There are some problems..."
           extra={
-            <Button onClick={fetchData} type="primary" key="again">
+            <Button onClick={() => fetchData()} type="primary" key="again">
               Try it again
             </Button>
           }
