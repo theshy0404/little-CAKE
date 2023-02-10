@@ -1,71 +1,83 @@
-import React, { useState, useEffect } from "react";
-import { Button, Space, Result, message } from "antd";
-import LOADING_GIF from "../../public/loading.gif";
-import styles from "./styles.module.css";
-import { doSQLProduce } from "../../api/doRequest";
+import React, { useCallback } from "react";
+import { Layout, Menu, theme, Avatar } from "antd";
+import styles from "./index.module.css";
+import { AppstoreOutlined, UserOutlined } from "@ant-design/icons";
+import { Route, Routes, useNavigate } from "react-router-dom";
+import UserAvator from "../../compoents/UserAvator";
+
+const { Header, Content, Footer } = Layout;
+
+const menuItems = [
+  {
+    label: "案例库",
+    key: "cases",
+    icon: <AppstoreOutlined />,
+  },
+  {
+    label: "法律库",
+    key: "laws",
+    icon: <AppstoreOutlined />,
+    children: [
+      {
+        label: "法律",
+        key: "setting:1",
+      },
+      {
+        label: "法规",
+        key: "setting:2",
+      },
+    ],
+  },
+  {
+    label: "知识库",
+    key: "knowledge",
+    icon: <AppstoreOutlined />,
+  },
+  {
+    label: "讨论区",
+    key: "talk",
+    icon: <AppstoreOutlined />,
+  },
+];
 
 const Home = () => {
-  const [msg, setMsg] = useState("Happy NewYear!");
-  const [count, setCount] = useState(0);
-  const [isLoading, setLoading] = useState(true);
-  const [isError, setError] = useState(false);
-  const [list, setList] = useState([]);
-
-  useEffect(() => {
-    setTimeout(fetchData, 2000);
+  const {
+    token: { colorBgContainer },
+  } = theme.useToken();
+  const navigate = useNavigate();
+  const onClickMenu = useCallback((selectItem) => {
+    const { keyPath } = selectItem;
+    navigate(`/index/${keyPath.pop()}`);
   }, []);
 
-  const fetchData = () => {
-    setLoading(true);
-    doSQLProduce("get_little_cake", {
-      mock_id1: "2",
-      user: "little_cake",
-      mock_id2: "1",
-    })
-      .then((data) => {
-        Array.isArray(data) && setList(data);
-      })
-      .catch((error) => {
-        message.error(error.message);
-        setError(true);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  };
-
   return (
-    <>
-      {isLoading ? (
-        <img src={LOADING_GIF} />
-      ) : isError ? (
-        <Result
-          status="error"
-          title="There are some problems..."
-          extra={
-            <Button onClick={() => fetchData()} type="primary" key="again">
-              Try it again
-            </Button>
-          }
+    <Layout className="layout">
+      <Header>
+        <div className={styles.logo} />
+        <UserAvator />
+        <Menu
+          theme="dark"
+          mode="horizontal"
+          items={menuItems}
+          style={{ fontSize: 16 }}
+          onClick={onClickMenu}
         />
-      ) : (
-        <div className={styles.wrap}>
-          <h1>{msg}</h1>
-          {list.map((item) => (
-            <h3 key={item.id}>{item.name}</h3>
-          ))}
-          <h2>count: {count}</h2>
-          <Space>
-            <Button type="primary" onClick={() => setCount(count + 1)}>
-              add
-            </Button>
-            <Button danger onClick={() => setCount(count - 1)}>
-              reduce
-            </Button>
-          </Space>
-        </div>
-      )}
-    </>
+      </Header>
+      <Content className={styles.content} style={{ padding: "20px 50px" }}>
+        <Routes>
+          {/* <Route index path="/" element={<Home />} /> */}
+          <Route path="/index/" element={<h1>Home</h1>} />
+          <Route path="/index/cases" element={<h1>cases</h1>} />
+          <Route path="/index/knowledge" element={<h1>knowledge</h1>} />
+          <Route path="/index/laws" element={<h1>Laws</h1>} />
+          <Route path="/index/talk" element={<h1>talk</h1>} />
+          <Route path="/index/*" element={<h1>404</h1>} />
+        </Routes>
+      </Content>
+      <Footer style={{ textAlign: "center", background: "#fff" }}>
+        ©浙江理工大学
+      </Footer>
+    </Layout>
   );
 };
 
