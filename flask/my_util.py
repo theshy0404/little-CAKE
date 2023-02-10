@@ -5,7 +5,7 @@ import simplejson
 import MySQLdb
 import my_text as text
 
-default_database = 'mycode'
+default_database = 'little_cake'
 number_types = ['int', 'decimal', 'float']
 print('int' in number_types)
 
@@ -26,8 +26,10 @@ def get_produce_params(cursor, produce):
 
 
 def do_sql_produce(cursor, produce, params):
+    # 先提取存储过程的参数
     produce_params_result = get_produce_params(cursor, produce)
     params_sql = ""
+    # 将前端的参数和存储过程进行匹配
     if len(produce_params_result):
         for produce_param in simplejson.loads(produce_params_result):
             param_type = produce_param["DATA_TYPE"]
@@ -38,9 +40,12 @@ def do_sql_produce(cursor, produce, params):
             else:
                 params_sql = params_sql + f"'{param_value}',"
         params_sql = params_sql[0:-1]
-    cursor.execute(f"call get_little_cake({params_sql});")
+    print(f"call {produce}({params_sql});")
+    # 匹配后拼接最终执行的语句
+    cursor.execute(f"call {produce}({params_sql});")
     if cursor.description is None:
         return 'No Data...'
+    # sql执行结果转换为json数组
     return result_to_json(cursor)
 
 
