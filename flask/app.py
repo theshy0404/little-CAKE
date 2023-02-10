@@ -18,16 +18,19 @@ def index():
     res.headers['Access-Control-Allow-Origin'] = '*'
     res.headers['Access-Control-Allow-Methods'] = 'OPTIONS,HEAD,GET,POST'
     res.headers['Access-Control-Allow-Headers'] = 'x-requested-with'
-    return 'Happy NewYear!'
+    return 'Happy 根路径!'
 
-
+# 表示flask监听路径为/doProduce的请求并执行下列代码
 @app.route('/doProduce', methods=['GET', 'POST'])
-def problem_type_admin():
-    do_sql = open_sql('mycode')
+def do_sql_produce():
+    # 数据库执行对象，在这里打开
+    do_sql = open_sql('little_cake')
     if request.method == 'GET':
-        return 'Happy NewYear!'
+        return 'Happy冰心!'
     elif request.method == 'POST':
+        # 取出请求参数
         params = request.json.get('params')
+        # 取出请求存储过程
         produce = request.json.get('produce')
         result = do_sql_produce(do_sql, produce, params)
         close_sql(do_sql)
