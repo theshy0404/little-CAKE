@@ -5,7 +5,7 @@ import simplejson
 import MySQLdb
 import my_text as text
 
-default_database = 'little_cake'
+default_database = 'lawProject'
 number_types = ['int', 'decimal', 'float']
 print('int' in number_types)
 
